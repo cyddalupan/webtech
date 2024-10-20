@@ -1,6 +1,6 @@
 from django.urls import path
-from .views import handle_facebook_chat
+from .views import save_facebook_chat
 
 urlpatterns = [
-    path('webhook/', handle_facebook_chat, name='handle_facebook_chat'),
+    path('webhook/', save_facebook_chat, name='save_facebook_chat'),
 ]
