@@ -4,6 +4,7 @@ import json
 import requests
 from django.http import JsonResponse, HttpResponse
 from .models import Chat, UserProfile
+from django.views.decorators.csrf import csrf_exempt
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -11,6 +12,7 @@ load_dotenv()
 VERIFY_TOKEN = os.getenv('VERIFY_TOKEN')
 PAGE_ACCESS_TOKEN = os.getenv('PAGE_ACCESS_TOKEN')
 
+@csrf_exempt
 def save_facebook_chat(request):
     if request.method == 'GET':
         # Verification for the webhook setup with Facebook
