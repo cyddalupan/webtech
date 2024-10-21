@@ -30,21 +30,31 @@ def save_facebook_chat(request):
 
         for entry in data['entry']:
             for event in entry['messaging']:
-                sender_id = event['sender']['id']  # The user's facebook ID
+                sender_id = event['sender']['id']  # The user's Facebook ID
                 page_id = entry['id']  # The Facebook page ID
                 message_text = event['message'].get('text')  # Message from the user
 
                 # Handle user profile creation or retrieval
-                user_profile, created = UserProfile.objects.get_or_create(facebook_id=sender_id, defaults={
-                    'facebook_id': sender_id,
-                    'page_id': page_id,
-                    'full_name': 'Facebook User'  # You can update this later with Facebook Graph API if needed
-                })
+                user_profile, created = UserProfile.objects.get_or_create(
+                    facebook_id=sender_id,
+                    defaults={
+                        'facebook_id': sender_id,
+                        'page_id': page_id,
+                        'full_name': 'Facebook User'  # Default value if not fetched yet
+                    }
+                )
+
+                # If a new profile is created or the existing profile has a default name, fetch the real name
+                if created or user_profile.full_name == 'Facebook User':
+                    user_name = get_facebook_user_name(sender_id)
+                    if user_name != 'Facebook User':  # Update only if a valid name is fetched
+                        user_profile.full_name = user_name
+                        user_profile.save()
 
                 # Save the incoming message to the Chat model
                 chat = Chat.objects.create(user=user_profile, message=message_text, reply='')
 
-                # AI Logic
+                # AI Logic to process the message and generate a reply
                 response_text = ai_process(message_text)
 
                 # Send a reply back to the user
@@ -57,6 +67,18 @@ def save_facebook_chat(request):
         return JsonResponse({'status': 'message processed', 'reply': response_text}, status=200)
 
     return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+def get_facebook_user_name(facebook_id):
+    """
+    Fetch the user's name from the Facebook Graph API using their Facebook ID.
+    """
+    url = f"https://graph.facebook.com/{facebook_id}?access_token={PAGE_ACCESS_TOKEN}"
+    response = requests.get(url)
+    
+    if response.status_code == 200:
+        user_data = response.json()
+        return user_data.get('name', 'Facebook User')  # Default to 'Facebook User' if name not found
+    return 'Facebook User'  # Fallback if the API request fails
 
 def send_message(recipient_id, message_text):
     """
@@ -72,6 +94,7 @@ def send_message(recipient_id, message_text):
     return response.status_code
 
 def ai_process(message_text):
+    # TODO: Get Name
     # TODO: fix treds reply
     # TODO: add convince
     # TODO: Add functions with status from user
