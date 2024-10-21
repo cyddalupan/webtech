@@ -55,7 +55,7 @@ def save_facebook_chat(request):
                 chat = Chat.objects.create(user=user_profile, message=message_text, reply='')
 
                 # AI Logic to process the message and generate a reply
-                response_text = ai_process(sender_id, message_text)
+                response_text = ai_process(user_profile)
 
                 # Send a reply back to the user
                 send_message(sender_id, response_text)
@@ -93,17 +93,10 @@ def send_message(recipient_id, message_text):
     response = requests.post(post_url, json=response_message)
     return response.status_code
 
-def ai_process(facebook_id, message_text):
+def ai_process(user_profile):
     # TODO: Get Name
-    # TODO: add convince
     # TODO: Add functions with status from user
     # TODO: user info saver
-
-    # Retrieve the user profile
-    try:
-        user_profile = UserProfile.objects.get(facebook_id=facebook_id)
-    except UserProfile.DoesNotExist:
-        return "User not found."
 
     # Retrieve the last 6 chat history for this user
     chat_history = Chat.objects.filter(user=user_profile).order_by('-timestamp')[:6]
@@ -117,6 +110,23 @@ def ai_process(facebook_id, message_text):
         {"role": "system", "content": f"Product Info: {product_info}"} 
     ]
 
+    ask_message = ""
+    # Ask for User info
+    if not user_profile.full_name or user_profile.full_name == "Facebook User":
+        ask_message = "Ask for the users real fullname of the applicant because facebook name might be not accurate."
+    if not user_profile.age:
+        ask_message = ask_message+" ask for the users age."
+    if not user_profile.contact_number:
+        ask_message = ask_message+" ask for the users contact number."
+    if not user_profile.whatsapp_number:
+        ask_message = ask_message+" ask for the users whatsapp number."
+    if not user_profile.passport:
+        ask_message = ask_message+" ask for the users passport number."
+    if not user_profile.location:
+        ask_message = ask_message+" ask for the users location or address."
+    if ask_message != '':
+        messages.append({"role": "system", "content": ask_message})
+
     # Include previous chat history in the conversation
     for chat in chat_history:
         messages.append({"role": "user", "content": chat.message})
@@ -125,6 +135,20 @@ def ai_process(facebook_id, message_text):
 
     tools = []  # Initialize empty tools list
 
+    if not user_profile.full_name or user_profile.full_name == "Facebook User":
+        ask_message = "Ask for the users real fullname of the applicant because facebook name might be not accurate."
+    if not user_profile.age:
+        ask_message = ask_message+" ask for the users age."
+    if not user_profile.contact_number:
+        ask_message = ask_message+" ask for the users contact number."
+    if not user_profile.whatsapp_number:
+        ask_message = ask_message+" ask for the users whatsapp number."
+    if not user_profile.passport:
+        ask_message = ask_message+" ask for the users passport number."
+    if not user_profile.location:
+        ask_message = ask_message+" ask for the users location or address."
+    if ask_message != '':
+        messages.append({"role": "system", "content": ask_message})
     # if var1:
     #     tools.append({
     #         "name": "get_user_status",
