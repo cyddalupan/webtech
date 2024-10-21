@@ -106,7 +106,7 @@ def ai_process(user_profile):
     product_info = "You are a friendly and persuasive chatbot representing 'Trabaho Abroad' a trusted and established overseas employment agency that has been successfully deploying workers to Saudi Arabia, Kuwait, and Qatar since the 1990s. Your goal is to highlight the stability of the company, the wealth of experience it brings, and the amazing opportunities available for applicants abroad. Convince potential applicants that 'Trabaho Abroad' is their best option for securing a well-paying, stable job in these countries."
 
     messages = [
-        {"role": "system", "content": "Talk in taglish. Use common words only. Keep reply short"},
+        {"role": "system", "content": "Talk in taglish. Use common words only. Keep reply short. If the user's profile information (e.g., full name, age, contact number, WhatsApp number, passport number, location) is incomplete or missing, use the available tools to request and save this information."},
         {"role": "system", "content": f"Product Info: {product_info}"} 
     ]
 
@@ -131,67 +131,115 @@ def ai_process(user_profile):
     for chat in chat_history:
         messages.append({"role": "user", "content": chat.message})
         if chat.reply != "":
-            messages.append({"role": "assistant", "content": chat.reply})
+            messages.append({"role": "system", "content": chat.reply})
 
-    tools = []  # Initialize empty tools list
-
-    if not user_profile.full_name or user_profile.full_name == "Facebook User":
-        ask_message = "Ask for the users real fullname of the applicant because facebook name might be not accurate."
-    if not user_profile.age:
-        ask_message = ask_message+" ask for the users age."
-    if not user_profile.contact_number:
-        ask_message = ask_message+" ask for the users contact number."
-    if not user_profile.whatsapp_number:
-        ask_message = ask_message+" ask for the users whatsapp number."
-    if not user_profile.passport:
-        ask_message = ask_message+" ask for the users passport number."
-    if not user_profile.location:
-        ask_message = ask_message+" ask for the users location or address."
-    if ask_message != '':
-        messages.append({"role": "system", "content": ask_message})
-    # if var1:
-    #     tools.append({
-    #         "name": "get_user_status",
-    #         "description": "Retrieve the status of a user based on the input.",
-    #         "arguments": json.dumps({"facebook_id": facebook_id})
-    #     })
-
-    # if var2:
-    #     tools.append({
-    #         "name": "fetch_product_details",
-    #         "description": "Fetch details about a product based on its ID or name.",
-    #         "arguments": json.dumps({"product_name": "SmartWatch X"})
-    #     })
+    tools = generate_tools(user_profile)
+    print("###tools",tools)
 
     response_content = ""
     try:
         completion = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=messages,
-            tools=tools if tools else None
+            tools=tools
         )
         response_content = completion.choices[0].message.content
 
-        # tool_calls = completion.choices[0].message.tool_calls
-        # if tool_calls:
-        #     for tool_call in tool_calls:
-        #         function_name = tool_call.function.name
-        #         arguments = tool_call.function.arguments
-        #         arguments_dict = json.loads(arguments)
+        print("###completion", completion)
 
-        #         # Process the function calls dynamically
-        #         if function_name == "get_user_status":
-        #             user_status = get_user_status(arguments_dict['facebook_id'])
-        #             response_content += f"\nUser Status: {user_status}"
-                
-        #         elif function_name == "fetch_product_details":
-        #             product_details = fetch_product_details(arguments_dict['product_name'])
-        #             response_content += f"\nProduct Details: {product_details}"
+        tool_calls = completion.choices[0].message.tool_calls
+        print("###tool_calls",tool_calls)
+        if tool_calls:
+            # Call without function or tools
+            completion = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=messages
+            )
+            response_content = completion.choices[0].message.content
+
+            for tool_call in tool_calls:
+                function_name = tool_call.function.name
+                arguments = tool_call.function.arguments
+                arguments_dict = json.loads(arguments)
+
+                # Process the function calls dynamically
+                if function_name == "save_name":
+                    user_profile.full_name = arguments_dict['full_name']
+                if function_name == "save_age":
+                    user_profile.age = arguments_dict['age']
+                if function_name == "save_contact_number":
+                    user_profile.contact_number = arguments_dict['contact_number']
+                if function_name == "save_whatsapp_number":
+                    user_profile.whatsapp_number = arguments_dict['whatsapp_number']
+                if function_name == "save_passport":
+                    user_profile.passport = arguments_dict['passport']
+                if function_name == "save_location":
+                    user_profile.location = arguments_dict['location']
+                user_profile.save()
+
+                # elif function_name == "fetch_product_details":
+                #     product_details = fetch_product_details(arguments_dict['product_name'])
+                #     response_content += f"\nProduct Details: {product_details}"
 
     except Exception as e:
             traceback.print_exc()
             response_content = str(e)
     return response_content
+
+def generate_tools(user_profile):
+    tools = []
+
+    # Special case for full_name
+    if not user_profile.full_name or user_profile.full_name == "Facebook User":
+        tools.append({
+            "type": "function",
+            "function": {
+                "name": "save_name",
+                "description": "save name of user",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "full_name": {
+                            "type": "string",
+                            "description": "user full name",
+                        },
+                    },
+                    "required": ["full_name"],
+                },
+            }
+        })
+
+    # Other fields
+    fields = [
+        {"field": "age", "function_name": "save_age", "description": "save age of user", "parameter_type": "string", "parameter_name": "age"},
+        {"field": "contact_number", "function_name": "save_contact_number", "description": "save contact number of user", "parameter_type": "string", "parameter_name": "contact_number"},
+        {"field": "whatsapp_number", "function_name": "save_whatsapp_number", "description": "save whatsapp number of user", "parameter_type": "string", "parameter_name": "whatsapp_number"},
+        {"field": "passport", "function_name": "save_passport", "description": "save passport number of user", "parameter_type": "string", "parameter_name": "passport"},
+        {"field": "location", "function_name": "save_location", "description": "save location of user", "parameter_type": "string", "parameter_name": "location"},
+    ]
+
+    for field_info in fields:
+        if not getattr(user_profile, field_info["field"]):
+            tools.append({
+                "type": "function",
+                "function": {
+                    "name": field_info["function_name"],
+                    "description": field_info["description"],
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            field_info["parameter_name"]: {
+                                "type": field_info["parameter_type"],
+                                "description": f"user {field_info['field']}",
+                            },
+                        },
+                        "required": [field_info["parameter_name"]],
+                    },
+                }
+            })
+
+    return tools
+
 
 def chat_test_page(request):
     return render(request, 'chat_test.html')
