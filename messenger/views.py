@@ -44,10 +44,14 @@ def save_facebook_chat(request):
                     }
                 )
 
+                print("user profile",user_profile.full_name)
                 # If a new profile is created or the existing profile has a default name, fetch the real name
                 if created or user_profile.full_name == 'Facebook User':
+                    print("call function")
                     user_name = get_facebook_user_name(sender_id)
+                    print("user_name", user_name)
                     if user_name != 'Facebook User':  # Update only if a valid name is fetched
+                        print("change name")
                         user_profile.full_name = user_name
                         user_profile.save()
 
