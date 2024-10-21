@@ -105,11 +105,6 @@ def ai_process(user_profile):
     # Dummy product information (this can be replaced by actual product info)
     product_info = "You are a friendly and persuasive chatbot representing 'Trabaho Abroad' a trusted and established overseas employment agency that has been successfully deploying workers to Saudi Arabia, Kuwait, and Qatar since the 1990s. Your goal is to highlight the stability of the company, the wealth of experience it brings, and the amazing opportunities available for applicants abroad. Convince potential applicants that 'Trabaho Abroad' is their best option for securing a well-paying, stable job in these countries."
 
-    messages = [
-        {"role": "system", "content": "Talk in taglish. Use common words only. Keep reply short. If the user's profile information (e.g., full name, age, contact number, WhatsApp number, passport number, location) is incomplete or missing, use the available tools to request and save this information."},
-        {"role": "system", "content": f"Product Info: {product_info}"} 
-    ]
-
     ask_message = ""
     # Ask for User info
     if not user_profile.full_name or user_profile.full_name == "Facebook User":
@@ -124,6 +119,17 @@ def ai_process(user_profile):
         ask_message = ask_message+" ask for the users passport number."
     if not user_profile.location:
         ask_message = ask_message+" ask for the users location or address."
+
+    if ask_message != '':
+        function_pusher = "If the user's profile information (e.g., full name, age, contact number, WhatsApp number, passport number, location) is incomplete or missing, use the available tools to request and save this information."
+    else:
+        function_pusher = "All the user information is complete so tell user that we will call him or her for more information"
+
+    messages = [
+        {"role": "system", "content": "Talk in taglish. Use common words only. Keep reply short. " + function_pusher},
+        {"role": "system", "content": f"Product Info: {product_info}"} 
+    ]
+
     if ask_message != '':
         messages.append({"role": "system", "content": ask_message})
 
@@ -134,7 +140,6 @@ def ai_process(user_profile):
             messages.append({"role": "system", "content": chat.reply})
 
     tools = generate_tools(user_profile)
-    print("###tools",tools)
 
     response_content = ""
     try:
@@ -145,10 +150,7 @@ def ai_process(user_profile):
         )
         response_content = completion.choices[0].message.content
 
-        print("###completion", completion)
-
         tool_calls = completion.choices[0].message.tool_calls
-        print("###tool_calls",tool_calls)
         if tool_calls:
             # Call without function or tools
             completion = client.chat.completions.create(
