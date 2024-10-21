@@ -105,14 +105,16 @@ def ai_process(facebook_id, message_text):
     except UserProfile.DoesNotExist:
         return "User not found."
 
-    # Retrieve the chat history for this user
+    # Retrieve the last 6 chat history for this user
     chat_history = Chat.objects.filter(user=user_profile).order_by('-timestamp')[:6]
-    # Now reverse the chat history to maintain correct chronological order
-    chat_history = list(chat_history)[::-1] 
+    chat_history = list(chat_history)[::-1]  # Reverse to maintain correct chronological order
+
+    # Dummy product information (this can be replaced by actual product info)
+    product_info = "You are a friendly and persuasive chatbot representing 'Trabaho Abroad' a trusted and established overseas employment agency that has been successfully deploying workers to Saudi Arabia, Kuwait, and Qatar since the 1990s. Your goal is to highlight the stability of the company, the wealth of experience it brings, and the amazing opportunities available for applicants abroad. Convince potential applicants that 'Trabaho Abroad' is their best option for securing a well-paying, stable job in these countries."
 
     messages = [
         {"role": "system", "content": "Talk in taglish. Use common words only. Keep reply short"},
-        #{"role": "system", "content": f"Employee Name: {employee_name}"},
+        {"role": "system", "content": f"Product Info: {product_info}"} 
     ]
 
     # Include previous chat history in the conversation
@@ -121,19 +123,47 @@ def ai_process(facebook_id, message_text):
         if chat.reply != "":
             messages.append({"role": "assistant", "content": chat.reply})
 
-    # Add new chat
-    #messages.append({"role": "user", "content": message_text})
+    tools = []  # Initialize empty tools list
 
-    print(messages)
+    # if var1:
+    #     tools.append({
+    #         "name": "get_user_status",
+    #         "description": "Retrieve the status of a user based on the input.",
+    #         "arguments": json.dumps({"facebook_id": facebook_id})
+    #     })
+
+    # if var2:
+    #     tools.append({
+    #         "name": "fetch_product_details",
+    #         "description": "Fetch details about a product based on its ID or name.",
+    #         "arguments": json.dumps({"product_name": "SmartWatch X"})
+    #     })
 
     response_content = ""
     try:
         completion = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=messages,
-            #tools=tools,
+            tools=tools if tools else None
         )
         response_content = completion.choices[0].message.content
+
+        # tool_calls = completion.choices[0].message.tool_calls
+        # if tool_calls:
+        #     for tool_call in tool_calls:
+        #         function_name = tool_call.function.name
+        #         arguments = tool_call.function.arguments
+        #         arguments_dict = json.loads(arguments)
+
+        #         # Process the function calls dynamically
+        #         if function_name == "get_user_status":
+        #             user_status = get_user_status(arguments_dict['facebook_id'])
+        #             response_content += f"\nUser Status: {user_status}"
+                
+        #         elif function_name == "fetch_product_details":
+        #             product_details = fetch_product_details(arguments_dict['product_name'])
+        #             response_content += f"\nProduct Details: {product_details}"
+
     except Exception as e:
             traceback.print_exc()
             response_content = str(e)
