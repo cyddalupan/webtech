@@ -44,22 +44,18 @@ def save_facebook_chat(request):
                     }
                 )
 
-                print("user profile",user_profile.full_name)
                 # If a new profile is created or the existing profile has a default name, fetch the real name
-                if created or user_profile.full_name == 'Facebook User':
-                    print("call function")
-                    user_name = get_facebook_user_name(sender_id)
-                    print("user_name", user_name)
-                    if user_name != 'Facebook User':  # Update only if a valid name is fetched
-                        print("change name")
-                        user_profile.full_name = user_name
-                        user_profile.save()
+                # if created or user_profile.full_name == 'Facebook User':
+                #     user_name = get_facebook_user_name(sender_id)
+                #     if user_name != 'Facebook User': 
+                #         user_profile.full_name = user_name
+                #         user_profile.save()
 
                 # Save the incoming message to the Chat model
                 chat = Chat.objects.create(user=user_profile, message=message_text, reply='')
 
                 # AI Logic to process the message and generate a reply
-                response_text = ai_process(message_text)
+                response_text = ai_process(sender_id, message_text)
 
                 # Send a reply back to the user
                 send_message(sender_id, response_text)
@@ -81,8 +77,8 @@ def get_facebook_user_name(facebook_id):
     
     if response.status_code == 200:
         user_data = response.json()
-        return user_data.get('name', 'Facebook User')  # Default to 'Facebook User' if name not found
-    return 'Facebook User'  # Fallback if the API request fails
+        return user_data.get('name', 'Facebook User') 
+    return 'Facebook User' 
 
 def send_message(recipient_id, message_text):
     """
@@ -97,23 +93,38 @@ def send_message(recipient_id, message_text):
     response = requests.post(post_url, json=response_message)
     return response.status_code
 
-def ai_process(message_text):
+def ai_process(facebook_id, message_text):
     # TODO: Get Name
-    # TODO: fix treds reply
     # TODO: add convince
     # TODO: Add functions with status from user
     # TODO: user info saver
 
+    # Retrieve the user profile
+    try:
+        user_profile = UserProfile.objects.get(facebook_id=facebook_id)
+    except UserProfile.DoesNotExist:
+        return "User not found."
+
+    # Retrieve the chat history for this user
+    chat_history = Chat.objects.filter(user=user_profile).order_by('-timestamp')[:6]
+    # Now reverse the chat history to maintain correct chronological order
+    chat_history = list(chat_history)[::-1] 
 
     messages = [
         {"role": "system", "content": "Talk in taglish. Use common words only. Keep reply short"},
         #{"role": "system", "content": f"Employee Name: {employee_name}"},
     ]
 
-    # for obj in user_message:
-    #     sender = "user" if obj['sender'] != "AI" else "system"
-    #     messages.append({"role": sender, "content": obj['text']})
-    messages.append({"role": "user", "content": message_text})
+    # Include previous chat history in the conversation
+    for chat in chat_history:
+        messages.append({"role": "user", "content": chat.message})
+        if chat.reply != "":
+            messages.append({"role": "assistant", "content": chat.reply})
+
+    # Add new chat
+    #messages.append({"role": "user", "content": message_text})
+
+    print(messages)
 
     response_content = ""
     try:
