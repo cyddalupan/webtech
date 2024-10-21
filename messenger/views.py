@@ -44,13 +44,6 @@ def save_facebook_chat(request):
                     }
                 )
 
-                # If a new profile is created or the existing profile has a default name, fetch the real name
-                # if created or user_profile.full_name == 'Facebook User':
-                #     user_name = get_facebook_user_name(sender_id)
-                #     if user_name != 'Facebook User': 
-                #         user_profile.full_name = user_name
-                #         user_profile.save()
-
                 # Save the incoming message to the Chat model
                 chat = Chat.objects.create(user=user_profile, message=message_text, reply='')
 
@@ -68,18 +61,6 @@ def save_facebook_chat(request):
 
     return JsonResponse({'error': 'Invalid request method'}, status=400)
 
-def get_facebook_user_name(facebook_id):
-    """
-    Fetch the user's name from the Facebook Graph API using their Facebook ID.
-    """
-    url = f"https://graph.facebook.com/{facebook_id}?access_token={PAGE_ACCESS_TOKEN}"
-    response = requests.get(url)
-    
-    if response.status_code == 200:
-        user_data = response.json()
-        return user_data.get('name', 'Facebook User') 
-    return 'Facebook User' 
-
 def send_message(recipient_id, message_text):
     """
     Sends a message back to the Facebook user using Facebook's Send API.
@@ -94,9 +75,6 @@ def send_message(recipient_id, message_text):
     return response.status_code
 
 def ai_process(user_profile):
-    # TODO: Get Name
-    # TODO: Add functions with status from user
-    # TODO: user info saver
 
     # Retrieve the last 6 chat history for this user
     chat_history = Chat.objects.filter(user=user_profile).order_by('-timestamp')[:6]
@@ -177,11 +155,13 @@ def ai_process(user_profile):
                     user_profile.passport = arguments_dict['passport']
                 if function_name == "save_location":
                     user_profile.location = arguments_dict['location']
-                user_profile.save()
 
-                # elif function_name == "fetch_product_details":
-                #     product_details = fetch_product_details(arguments_dict['product_name'])
-                #     response_content += f"\nProduct Details: {product_details}"
+            # Save updated user profile in Django
+            user_profile.save()
+
+            # After updating user data locally, call the PHP API to sync
+            update_user_in_php_api(user_profile)
+
 
     except Exception as e:
             traceback.print_exc()
@@ -245,6 +225,34 @@ def generate_tools(user_profile):
 
     return tools
 
+def update_user_in_php_api(user_profile):
+    """
+    Send a POST request to the PHP API to update user information.
+    """
+    # Prepare the data payload for the API call
+    data = {
+        'user_id': user_profile.facebook_id, 
+        'first_name': user_profile.full_name.split(' ')[0] if user_profile.full_name else '', 
+        'last_name': ' '.join(user_profile.full_name.split(' ')[1:]) if user_profile.full_name else '',
+        'age': user_profile.age,
+        'contactnum': user_profile.contact_number,
+        'address': user_profile.location,
+        'passport': user_profile.passport,
+        'page_id': user_profile.page_id, 
+    }
+
+    headers = {
+        'Content-Type': 'application/json',
+    }
+
+    # Make the POST request with JSON data
+    response = requests.post('https://facebookapplicant.com/update_user.php', json=data, headers=headers)
+
+    # Handle the response
+    if response.status_code == 200:
+        print(f"User {user_profile.facebook_id} successfully updated in PHP system.")
+    else:
+        print(f"Failed to update user {user_profile.facebook_id} in PHP system. Status Code: {response.status_code}, Response: {response.text}")
 
 def chat_test_page(request):
     return render(request, 'chat_test.html')
