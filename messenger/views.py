@@ -238,6 +238,9 @@ def generate_tools(user_profile):
                 }
             })
 
+    if len(tools) == 0:
+        return None
+
     return tools
 
 
