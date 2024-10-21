@@ -3,3 +3,4 @@
 #pip install djangorestframework
 #pip install django-allauth
 #pip install requests
+#pip install openai
