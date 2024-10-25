@@ -7,7 +7,7 @@ from openai import OpenAI
 from django.http import JsonResponse, HttpResponse
 from .models import Chat, UserProfile
 from django.views.decorators.csrf import csrf_exempt
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -257,3 +257,20 @@ def update_user_in_php_api(user_profile):
 
 def chat_test_page(request):
     return render(request, 'chat_test.html')
+
+def get_user_by_facebook_id(request, facebook_id):
+    # Retrieve the user profile by facebook_id
+    user_profile = get_object_or_404(UserProfile, facebook_id=facebook_id)
+    # Prepare the response data
+    user_data = {
+        'facebook_id': user_profile.facebook_id,
+        'page_id': user_profile.page_id,
+        'full_name': user_profile.full_name,
+        'age': user_profile.age,
+        'contact_number': user_profile.contact_number,
+        'whatsapp_number': user_profile.whatsapp_number,
+        'passport': user_profile.passport,
+        'location': user_profile.location,
+    }
+    # Return the user data as a JSON response
+    return JsonResponse(user_data)
