@@ -9,6 +9,7 @@ class UserProfile(models.Model):
     whatsapp_number = models.CharField(max_length=20, null=True, blank=True)
     passport = models.CharField(max_length=50, null=True, blank=True)
     location = models.CharField(max_length=255, null=True, blank=True)
+    is_copied = models.BooleanField(blank=False)
 
     def __str__(self):
         return self.full_name
