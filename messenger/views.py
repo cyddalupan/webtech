@@ -130,13 +130,6 @@ def ai_process(user_profile):
 
         tool_calls = completion.choices[0].message.tool_calls
         if tool_calls:
-            # Call without function or tools
-            completion = client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=messages
-            )
-            response_content = completion.choices[0].message.content
-
             for tool_call in tool_calls:
                 function_name = tool_call.function.name
                 arguments = tool_call.function.arguments
@@ -157,11 +150,15 @@ def ai_process(user_profile):
                     user_profile.location = arguments_dict['location']
 
             # Save updated user profile in Django
+            user_profile.is_copied = False
             user_profile.save()
 
-            # After updating user data locally, call the PHP API to sync
-            update_user_in_php_api(user_profile)
-
+            # Call without function or tools
+            completion = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=messages
+            )
+            response_content = completion.choices[0].message.content
 
     except Exception as e:
             traceback.print_exc()
@@ -225,52 +222,55 @@ def generate_tools(user_profile):
 
     return tools
 
-def update_user_in_php_api(user_profile):
-    """
-    Send a POST request to the PHP API to update user information.
-    """
-    # Prepare the data payload for the API call
-    data = {
-        'user_id': user_profile.facebook_id, 
-        'first_name': user_profile.full_name.split(' ')[0] if user_profile.full_name else '', 
-        'last_name': ' '.join(user_profile.full_name.split(' ')[1:]) if user_profile.full_name else '',
-        'age': user_profile.age,
-        'contactnum': user_profile.contact_number,
-        'address': user_profile.location,
-        'passport': user_profile.passport,
-        'page_id': user_profile.page_id, 
-    }
-
-    headers = {
-        'Content-Type': 'application/json',
-        'X-Bypass-Security': 'true'
-    }
-
-    # Make the POST request with JSON data
-    response = requests.post('https://facebookapplicant.com/update_user.php', json=data, headers=headers)
-
-    # Handle the response
-    if response.status_code == 200:
-        print(f"User {user_profile.facebook_id} successfully updated in PHP system.")
-    else:
-        print(f"Failed to update user {user_profile.facebook_id} in PHP system. Status Code: {response.status_code}, Response: {response.text}")
-
 def chat_test_page(request):
     return render(request, 'chat_test.html')
 
-def get_user_by_facebook_id(request, facebook_id):
-    # Retrieve the user profile by facebook_id
-    user_profile = get_object_or_404(UserProfile, facebook_id=facebook_id)
-    # Prepare the response data
-    user_data = {
-        'facebook_id': user_profile.facebook_id,
-        'page_id': user_profile.page_id,
-        'full_name': user_profile.full_name,
-        'age': user_profile.age,
-        'contact_number': user_profile.contact_number,
-        'whatsapp_number': user_profile.whatsapp_number,
-        'passport': user_profile.passport,
-        'location': user_profile.location,
-    }
+def get_oldest_uncopied_user(request):
+    # Retrieve all user profiles where is_copied is False
+    uncopied_users = UserProfile.objects.filter(is_copied=False).order_by('id')
+
+    # Check if any uncopied user exists
+    if uncopied_users.exists():
+        # Get the oldest uncopied user's profile
+        oldest_uncopied_user = uncopied_users.first()
+        
+        # Prepare the response data
+        user_data = {
+            'status': 'user_available',
+            'facebook_id': oldest_uncopied_user.facebook_id,
+            'page_id': oldest_uncopied_user.page_id,
+            'full_name': oldest_uncopied_user.full_name,
+            'age': oldest_uncopied_user.age,
+            'contact_number': oldest_uncopied_user.contact_number,
+            'whatsapp_number': oldest_uncopied_user.whatsapp_number,
+            'passport': oldest_uncopied_user.passport,
+            'location': oldest_uncopied_user.location,
+        }
+    else:
+        # Return a status indicating no uncopied user is found
+        user_data = {
+            'status': 'user_unavailable'
+        }
+
     # Return the user data as a JSON response
     return JsonResponse(user_data)
+
+def mark_as_copied(request, facebook_id):
+    """
+    View to update the is_copied field of a UserProfile to True based on facebook_id.
+    
+    Args:
+    - facebook_id (str): The Facebook ID of the user profile to update.
+    
+    Returns:
+    - JsonResponse: A JSON response with a success message.
+    """
+    # Retrieve the user profile or return 404 if not found
+    user_profile = get_object_or_404(UserProfile, facebook_id=facebook_id)
+    
+    # Update the is_copied field
+    user_profile.is_copied = True
+    user_profile.save()
+    
+    # Return a success message
+    return JsonResponse({'message': 'UserProfile marked as copied successfully.'})
