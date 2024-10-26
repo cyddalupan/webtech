@@ -256,6 +256,7 @@ def get_oldest_uncopied_user(request):
     return JsonResponse(user_data)
 
 def mark_as_copied(request, facebook_id):
+    print("facebook_id", facebook_id)
     """
     View to update the is_copied field of a UserProfile to True based on facebook_id.
     
@@ -267,10 +268,12 @@ def mark_as_copied(request, facebook_id):
     """
     # Retrieve the user profile or return 404 if not found
     user_profile = get_object_or_404(UserProfile, facebook_id=facebook_id)
+    print("user_profile", user_profile)
     
     # Update the is_copied field
     user_profile.is_copied = True
     user_profile.save()
+    print("after update", user_profile)
     
     # Return a success message
     return JsonResponse({'message': 'UserProfile marked as copied successfully.'})
