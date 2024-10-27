@@ -27,6 +27,7 @@ def save_facebook_chat(request):
 
     elif request.method == 'POST':
         data = json.loads(request.body)
+        response_text = ""
 
         for entry in data['entry']:
             for event in entry['messaging']:
