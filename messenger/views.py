@@ -34,28 +34,30 @@ def save_facebook_chat(request):
                 page_id = entry['id']  # The Facebook page ID
                 message_text = event['message'].get('text')  # Message from the user
 
-                # Handle user profile creation or retrieval
-                user_profile, created = UserProfile.objects.get_or_create(
-                    facebook_id=sender_id,
-                    defaults={
-                        'facebook_id': sender_id,
-                        'page_id': page_id,
-                        'full_name': 'Facebook User'  # Default value if not fetched yet
-                    }
-                )
+                # Check if the message_text is not None or empty
+                if message_text:
+                    # Handle user profile creation or retrieval
+                    user_profile, created = UserProfile.objects.get_or_create(
+                        facebook_id=sender_id,
+                        defaults={
+                            'facebook_id': sender_id,
+                            'page_id': page_id,
+                            'full_name': 'Facebook User'  # Default value if not fetched yet
+                        }
+                    )
 
-                # Save the incoming message to the Chat model
-                chat = Chat.objects.create(user=user_profile, message=message_text, reply='')
+                    # Save the incoming message to the Chat model
+                    chat = Chat.objects.create(user=user_profile, message=message_text, reply='')
 
-                # AI Logic to process the message and generate a reply
-                response_text = ai_process(user_profile)
+                    # AI Logic to process the message and generate a reply
+                    response_text = ai_process(user_profile)
 
-                # Send a reply back to the user
-                send_message(sender_id, response_text)
+                    # Send a reply back to the user
+                    send_message(sender_id, response_text)
 
-                # Save the reply in the database
-                chat.reply = response_text
-                chat.save()
+                    # Save the reply in the database
+                    chat.reply = response_text
+                    chat.save()
 
         return JsonResponse({'status': 'message processed', 'reply': response_text}, status=200)
 
