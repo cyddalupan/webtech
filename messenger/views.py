@@ -78,7 +78,7 @@ def send_message(recipient_id, message_text):
     return response.status_code
 
 def ai_process(user_profile):
-    # Retrieve the last 6 chat history for this user
+    # Retrieve the last 20 chat history for this user
     chat_history = Chat.objects.filter(user=user_profile).order_by('-timestamp')[:20]
     chat_history = list(chat_history)[::-1]  # Reverse to maintain correct chronological order
 
@@ -99,22 +99,25 @@ def ai_process(user_profile):
     ask_message = ""
     # Ask for User info
     if not user_profile.full_name or user_profile.full_name == "Facebook User":
-        ask_message = "Ask for the users real fullname of the applicant because facebook name might be not accurate."
-    if not user_profile.age:
-        ask_message += " ask for the users age."
+        ask_message = "Ask for the user's real full name because the Facebook name might not be accurate."
     if not user_profile.contact_number:
-        ask_message += " ask for the users contact number."
-    if not user_profile.whatsapp_number:
-        ask_message += " ask for the users whatsapp number."
-    if not user_profile.passport:
-        ask_message += " ask for the users passport number."
-    if not user_profile.location:
-        ask_message += " ask for the users location or address."
+        ask_message += " Ask for the user's contact number."
+
+    # Check if full name and contact number are provided, then ask for additional info
+    if user_profile.full_name and user_profile.contact_number:
+        if not user_profile.age:
+            ask_message += " Ask for the user's age."
+        if not user_profile.whatsapp_number:
+            ask_message += " Ask for the user's WhatsApp number."
+        if not user_profile.passport:
+            ask_message += " Ask for the user's passport number."
+        if not user_profile.location:
+            ask_message += " Ask for the user's location or address."
 
     if ask_message != '':
-        function_pusher = "If the user's profile information (e.g., full name, age, contact number, WhatsApp number, passport number, location) is incomplete or missing, use the available tools to request and save this information."
+        function_pusher = "If the user's profile information (e.g., full name, contact number, and other details) is incomplete or missing, use the available tools to request and save this information."
     else:
-        function_pusher = "All the user information is complete so tell user that we will call him or her for more information"
+        function_pusher = "All the user information is complete so tell the user that we will call him or her for more information."
 
     messages = [
         {"role": "system", "content": "Talk in taglish. Use common words only. Keep reply short. " + function_pusher},
