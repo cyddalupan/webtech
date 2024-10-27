@@ -76,7 +76,7 @@ def send_message(recipient_id, message_text):
 
 def ai_process(user_profile):
     # Retrieve the last 6 chat history for this user
-    chat_history = Chat.objects.filter(user=user_profile).order_by('-timestamp')[:6]
+    chat_history = Chat.objects.filter(user=user_profile).order_by('-timestamp')[:20]
     chat_history = list(chat_history)[::-1]  # Reverse to maintain correct chronological order
 
     product_info = ("You are a friendly and persuasive chatbot representing 'Trabaho Abroad,' a trusted and "
@@ -85,7 +85,8 @@ def ai_process(user_profile):
                     "extensive experience, and the amazing opportunities available for applicants. Convince potential "
                     "applicants that 'Trabaho Abroad' is their best option for securing a well-paying, stable job in "
                     "these countries. If you're not sure what to say, inform them that we will call them with more "
-                    "information. Note: We collect passport numbers, so do not mention it as sensitive data.")
+                    "information. Note: We collect passport numbers, so do not mention it as sensitive data."
+                    "if the user asks for our address, inform them that we will call them with that information.")
 
     ask_message = ""
     # Ask for User info
