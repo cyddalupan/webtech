@@ -75,28 +75,32 @@ def send_message(recipient_id, message_text):
     return response.status_code
 
 def ai_process(user_profile):
-
     # Retrieve the last 6 chat history for this user
     chat_history = Chat.objects.filter(user=user_profile).order_by('-timestamp')[:6]
     chat_history = list(chat_history)[::-1]  # Reverse to maintain correct chronological order
 
-    # Dummy product information (this can be replaced by actual product info)
-    product_info = "You are a friendly and persuasive chatbot representing 'Trabaho Abroad' a trusted and established overseas employment agency that has been successfully deploying workers to Saudi Arabia, Kuwait, and Qatar since the 1990s. Your goal is to highlight the stability of the company, the wealth of experience it brings, and the amazing opportunities available for applicants abroad. Convince potential applicants that 'Trabaho Abroad' is their best option for securing a well-paying, stable job in these countries."
+    product_info = ("You are a friendly and persuasive chatbot representing 'Trabaho Abroad,' a trusted and "
+                    "established overseas employment agency. Since the 1990s, we have been successfully deploying "
+                    "workers to Saudi Arabia, Kuwait, and Qatar. Your goal is to highlight our company's stability, "
+                    "extensive experience, and the amazing opportunities available for applicants. Convince potential "
+                    "applicants that 'Trabaho Abroad' is their best option for securing a well-paying, stable job in "
+                    "these countries. If you're not sure what to say, inform them that we will call them with more "
+                    "information. Note: We collect passport numbers, so do not mention it as sensitive data.")
 
     ask_message = ""
     # Ask for User info
     if not user_profile.full_name or user_profile.full_name == "Facebook User":
         ask_message = "Ask for the users real fullname of the applicant because facebook name might be not accurate."
     if not user_profile.age:
-        ask_message = ask_message+" ask for the users age."
+        ask_message += " ask for the users age."
     if not user_profile.contact_number:
-        ask_message = ask_message+" ask for the users contact number."
+        ask_message += " ask for the users contact number."
     if not user_profile.whatsapp_number:
-        ask_message = ask_message+" ask for the users whatsapp number."
+        ask_message += " ask for the users whatsapp number."
     if not user_profile.passport:
-        ask_message = ask_message+" ask for the users passport number."
+        ask_message += " ask for the users passport number."
     if not user_profile.location:
-        ask_message = ask_message+" ask for the users location or address."
+        ask_message += " ask for the users location or address."
 
     if ask_message != '':
         function_pusher = "If the user's profile information (e.g., full name, age, contact number, WhatsApp number, passport number, location) is incomplete or missing, use the available tools to request and save this information."
@@ -135,21 +139,36 @@ def ai_process(user_profile):
                 arguments = tool_call.function.arguments
                 arguments_dict = json.loads(arguments)
 
-                # Process the function calls dynamically
+                # Validation before saving data
                 if function_name == "save_name":
-                    user_profile.full_name = arguments_dict['full_name']
-                if function_name == "save_age":
-                    user_profile.age = arguments_dict['age']
-                if function_name == "save_contact_number":
-                    user_profile.contact_number = arguments_dict['contact_number']
-                if function_name == "save_whatsapp_number":
-                    user_profile.whatsapp_number = arguments_dict['whatsapp_number']
-                if function_name == "save_passport":
-                    user_profile.passport = arguments_dict['passport']
-                if function_name == "save_location":
-                    user_profile.location = arguments_dict['location']
+                    full_name = arguments_dict.get('full_name', '')
+                    if isinstance(full_name, str) and len(full_name) <= 255:
+                        user_profile.full_name = full_name
+                elif function_name == "save_age":
+                    age = arguments_dict.get('age')
+                    if isinstance(age, int) and 0 <= age <= 120:  # Validating age within a realistic human range
+                        user_profile.age = age
+                elif function_name == "save_contact_number":
+                    contact_number = arguments_dict.get('contact_number', '')
+                    if isinstance(contact_number, str) and len(contact_number) <= 20:  # Max length of 20
+                        # Optional: Add regex or another condition to ensure it's a valid phone number format
+                        user_profile.contact_number = contact_number
+                elif function_name == "save_whatsapp_number":
+                    whatsapp_number = arguments_dict.get('whatsapp_number', '')
+                    if isinstance(whatsapp_number, str) and len(whatsapp_number) <= 20:  # Max length of 20
+                        # Optional: Add regex or another condition to ensure it's a valid phone number format
+                        user_profile.whatsapp_number = whatsapp_number
+                elif function_name == "save_passport":
+                    passport = arguments_dict.get('passport', '')
+                    if isinstance(passport, str) and len(passport) <= 50:  # Max length of 50
+                        # Optional: Validate passport format based on specific requirements
+                        user_profile.passport = passport
+                elif function_name == "save_location":
+                    location = arguments_dict.get('location', '')
+                    if isinstance(location, str) and len(location) <= 255:
+                        user_profile.location = location
 
-            # Save updated user profile in Django
+            # Save updated user profile in Django without errors
             user_profile.is_copied = False
             user_profile.save()
 
@@ -161,8 +180,8 @@ def ai_process(user_profile):
             response_content = completion.choices[0].message.content
 
     except Exception as e:
-            traceback.print_exc()
-            response_content = str(e)
+        traceback.print_exc()
+        response_content = str(e)
     return response_content
 
 def generate_tools(user_profile):
