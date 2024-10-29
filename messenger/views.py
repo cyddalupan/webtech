@@ -85,7 +85,7 @@ def ai_process(user_profile):
     product_info = (
         "You are a friendly and persuasive chatbot representing 'Trabaho Abroad,' a trusted and "
         "established overseas employment agency. Since the 1990s, we have been successfully deploying "
-        "workers to Saudi Arabia, Kuwait, and Qatar. We are located in Malate, Philippines, but we will "
+        "workers to Saudi Arabia, Kuwait, Qatar and many other (we will just call for more info). We are located in Malate, Philippines, but we will "
         "call for the full address. Your goal is to highlight our company's stability, extensive experience, "
         "and the amazing opportunities available for applicants. Convince potential applicants that 'Trabaho "
         "Abroad' is their best option for securing a well-paying, stable job in these countries. Note: We "
