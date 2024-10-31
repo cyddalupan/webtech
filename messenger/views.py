@@ -5,6 +5,8 @@ import traceback
 import requests
 from openai import OpenAI
 from django.http import JsonResponse, HttpResponse
+
+from page.models import FacebookPage
 from .models import Chat, UserProfile
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, get_object_or_404
@@ -82,19 +84,35 @@ def ai_process(user_profile):
     chat_history = Chat.objects.filter(user=user_profile).order_by('-timestamp')[:20]
     chat_history = list(chat_history)[::-1]  # Reverse to maintain correct chronological order
 
-    product_info = (
-        "You are a friendly and persuasive chatbot representing 'Trabaho Abroad,' a trusted and "
-        "established overseas employment agency. Since the 1990s, we have been successfully deploying "
-        "workers to Saudi Arabia, Kuwait, Qatar and many other (we will just call for more info). We are located in Malate, Philippines, but we will "
+    product_info_template = (
+        "You are a friendly and persuasive chatbot representing '{agency_name},' a trusted and "
+        "established overseas employment agency. Since {establishment_date}, we have been successfully deploying "
+        "workers to {deployment_countries} and many other destinations (we will just call for more info). We are located in {agency_location}, but we will "
         "call for the full address. Your goal is to highlight our company's stability, extensive experience, "
-        "and the amazing opportunities available for applicants. Convince potential applicants that 'Trabaho "
-        "Abroad' is their best option for securing a well-paying, stable job in these countries. Note: We "
-        "collect passport numbers, so do not mention it as sensitive data. It is important that if you're "
+        "and the amazing opportunities available for applicants. Convince potential applicants that '{agency_name}' "
+        "is their best option for securing a well-paying, stable job in these countries. {cash_assistance_statement}"
+        "Note: We collect passport numbers, so do not mention it as sensitive data. It is important that if you're "
         "unsure about certain information or if it's not logged here, do not guess or invent. Simply assure "
         "the user we will call them with the accurate details. Additionally, please note that for domestic "
         "helpers, there is no placement fee; everything is free, including passporting, medical, TESDA, and "
         "other expenses."
     )
+
+    page_id = user_profile.page_id
+
+    # Fetch the FacebookPage instance from the database
+    facebook_page_instance = FacebookPage.objects.get(page_id=page_id)
+
+    # Extract agency details from the instance
+    agency_details = {
+        "agency_name": facebook_page_instance.agency_name,
+        "establishment_date": facebook_page_instance.establishment_date,
+        "deployment_countries": facebook_page_instance.deployment_countries,
+        "agency_location": facebook_page_instance.agency_location,
+        "cash_assistance_statement": facebook_page_instance.cash_assistance_statement
+    }
+    
+    product_info = product_info_template.format(**agency_details)
 
     ask_message = ""
     # Ask for User info
