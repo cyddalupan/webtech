@@ -52,11 +52,15 @@ def save_facebook_chat(request):
                     # Save the incoming message to the Chat model
                     chat = Chat.objects.create(user=user_profile, message=message_text, reply='')
 
+                    page_id = user_profile.page_id
+                    # Fetch the FacebookPage instance from the database
+                    facebook_page_instance = FacebookPage.objects.get(page_id=page_id)
+
                     # AI Logic to process the message and generate a reply
-                    response_text = ai_process(user_profile)
+                    response_text = ai_process(user_profile, facebook_page_instance)
 
                     # Send a reply back to the user
-                    send_message(sender_id, response_text)
+                    send_message(sender_id, response_text, facebook_page_instance)
 
                     # Save the reply in the database
                     chat.reply = response_text
@@ -66,11 +70,11 @@ def save_facebook_chat(request):
 
     return JsonResponse({'error': 'Invalid request method'}, status=400)
 
-def send_message(recipient_id, message_text):
+def send_message(recipient_id, message_text, facebook_page_instance):
     """
     Sends a message back to the Facebook user using Facebook's Send API.
     """
-    post_url = f"https://graph.facebook.com/v11.0/me/messages?access_token={PAGE_ACCESS_TOKEN}"
+    post_url = f"https://graph.facebook.com/v11.0/me/messages?access_token={facebook_page_instance.token}"
     response_message = {
         'recipient': {'id': recipient_id},
         'message': {'text': message_text}
@@ -79,7 +83,7 @@ def send_message(recipient_id, message_text):
     response = requests.post(post_url, json=response_message)
     return response.status_code
 
-def ai_process(user_profile):
+def ai_process(user_profile, facebook_page_instance):
     # Retrieve the last 20 chat history for this user
     chat_history = Chat.objects.filter(user=user_profile).order_by('-timestamp')[:20]
     chat_history = list(chat_history)[::-1]  # Reverse to maintain correct chronological order
@@ -97,11 +101,6 @@ def ai_process(user_profile):
         "helpers, there is no placement fee; everything is free, including passporting, medical, TESDA, and "
         "other expenses."
     )
-
-    page_id = user_profile.page_id
-
-    # Fetch the FacebookPage instance from the database
-    facebook_page_instance = FacebookPage.objects.get(page_id=page_id)
 
     # Extract agency details from the instance
     agency_details = {
