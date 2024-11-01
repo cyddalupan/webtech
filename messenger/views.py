@@ -137,7 +137,7 @@ def ai_process(user_profile, facebook_page_instance):
         function_pusher = "All the user information is complete so tell the user that we will call him or her for more information."
 
     messages = [
-        {"role": "system", "content": "Talk in taglish. Use common words only. Keep reply short. " + function_pusher},
+        {"role": "system", "content": "Talk in taglish. Use common words only. Keep reply short. ask question one at a time" + function_pusher},
         {"role": "system", "content": f"Product Info: {product_info}"} 
     ]
 
@@ -174,18 +174,16 @@ def ai_process(user_profile, facebook_page_instance):
                     if isinstance(full_name, str) and len(full_name) <= 255:
                         user_profile.full_name = full_name
                 elif function_name == "save_age":
-                    age = arguments_dict.get('age')
-                    if isinstance(age, int) and 0 <= age <= 120:  # Validating age within a realistic human range
+                    age = arguments_dict.get('age', '')
+                    if isinstance(age, str) and len(age) <= 30:
                         user_profile.age = age
                 elif function_name == "save_contact_number":
-                    contact_number = arguments_dict.get('contact_number', '')
-                    if isinstance(contact_number, str) and len(contact_number) <= 20:  # Max length of 20
-                        # Optional: Add regex or another condition to ensure it's a valid phone number format
-                        user_profile.contact_number = contact_number
+                		contact_number = arguments_dict.get('contact_number', '')
+                		if isinstance(contact_number, str) and len(contact_number) <= 20:
+                			user_profile.contact_number = contact_number
                 elif function_name == "save_whatsapp_number":
                     whatsapp_number = arguments_dict.get('whatsapp_number', '')
-                    if isinstance(whatsapp_number, str) and len(whatsapp_number) <= 20:  # Max length of 20
-                        # Optional: Add regex or another condition to ensure it's a valid phone number format
+                    if isinstance(whatsapp_number, str) and len(whatsapp_number) <= 20:
                         user_profile.whatsapp_number = whatsapp_number
                 elif function_name == "save_passport":
                     passport = arguments_dict.get('passport', '')

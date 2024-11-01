@@ -4,7 +4,7 @@ class UserProfile(models.Model):
     facebook_id = models.CharField(max_length=100, unique=True)
     page_id = models.CharField(max_length=100)
     full_name = models.CharField(max_length=255)
-    age = models.IntegerField(null=True, blank=True)
+    age = models.CharField(null=True, blank=True, max_length=30)
     contact_number = models.CharField(max_length=20, null=True, blank=True)
     whatsapp_number = models.CharField(max_length=20, null=True, blank=True)
     passport = models.CharField(max_length=50, null=True, blank=True)

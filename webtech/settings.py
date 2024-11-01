@@ -31,7 +31,7 @@ SECRET_KEY = 'django-insecure-x=4%y+f9tues^8a+l*t=a7ufj0u41!l92&vsau2*k-u!owq@l2
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["*", "https://webtech.welfareph.com"]
+ALLOWED_HOSTS = ["*", "https://webtech.welfareph.com", "https://develop.welfareph.com"]
 
 # Application definition
 
@@ -184,7 +184,7 @@ SITE_ID = 1
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' 
 
 
-CSRF_TRUSTED_ORIGINS=['https://webtech.welfareph.com']
+CSRF_TRUSTED_ORIGINS=['https://webtech.welfareph.com', 'https://develop.welfareph.com']
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
 
