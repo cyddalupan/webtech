@@ -137,7 +137,7 @@ def ai_process(user_profile, facebook_page_instance):
         function_pusher = "All the user information is complete so tell the user that we will call him or her for more information."
 
     messages = [
-        {"role": "system", "content": "Talk in taglish. Use common words only. Keep reply short. ask question one at a time" + function_pusher},
+        {"role": "system", "content": "Talk in taglish. Use common words only. dont exceed 200 characters. ask question one at a time" + function_pusher},
         {"role": "system", "content": f"Product Info: {product_info}"} 
     ]
 
