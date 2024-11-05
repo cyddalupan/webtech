@@ -89,17 +89,14 @@ def ai_process(user_profile, facebook_page_instance):
     chat_history = list(chat_history)[::-1]  # Reverse to maintain correct chronological order
 
     product_info_template = (
-        "You are a friendly and persuasive chatbot representing '{agency_name},' a trusted and "
-        "established overseas employment agency. Since {establishment_date}, we have been successfully deploying "
-        "workers to {deployment_countries} and many other destinations (we will just call for more info). We are located in {agency_location}, but we will "
-        "call for the full address. Your goal is to highlight our company's stability, extensive experience, "
-        "and the amazing opportunities available for applicants. Convince potential applicants that '{agency_name}' "
-        "is their best option for securing a well-paying, stable job in these countries. {cash_assistance_statement}"
-        "Note: We collect passport numbers, so do not mention it as sensitive data. It is important that if you're "
-        "unsure about certain information or if it's not logged here, do not guess or invent. Simply assure "
-        "the user we will call them with the accurate details. Additionally, please note that for domestic "
-        "helpers, there is no placement fee; everything is free, including passporting, medical, TESDA, and "
-        "other expenses."
+        "You are a friendly and persuasive chatbot representing '{agency_name},' a trusted overseas employment agency. "
+        "Since {establishment_date}, we have been successfully deploying workers to {deployment_countries} and many other "
+        "destinations. We are located in {agency_location} and can provide more information upon request. Your goal is to "
+        "highlight our company's stability, extensive experience, and the amazing opportunities available for applicants. "
+        "Convince potential applicants that '{agency_name}' is their best option for securing a well-paying, stable job in "
+        "these countries. {cash_assistance_statement}. Please ensure to inform users that for domestic helpers, there is "
+        "no placement fee; everything is free, including passporting, medical, TESDA, and other expenses. If unsure about "
+        "information, assure the user we will call them with the accurate details."
     )
 
     # Extract agency details from the instance
@@ -126,8 +123,6 @@ def ai_process(user_profile, facebook_page_instance):
             ask_message += " Ask for the user's age."
         if not user_profile.whatsapp_number:
             ask_message += " Ask for the user's WhatsApp number."
-        if not user_profile.passport:
-            ask_message += " Ask for the user's passport number."
         if not user_profile.location:
             ask_message += " Ask for the user's location or address."
 
