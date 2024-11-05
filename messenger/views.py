@@ -173,18 +173,13 @@ def ai_process(user_profile, facebook_page_instance):
                     if isinstance(age, str) and len(age) <= 30:
                         user_profile.age = age
                 elif function_name == "save_contact_number":
-                		contact_number = arguments_dict.get('contact_number', '')
-                		if isinstance(contact_number, str) and len(contact_number) <= 20:
-                			user_profile.contact_number = contact_number
+                    contact_number = arguments_dict.get('contact_number', '')
+                    if isinstance(contact_number, str) and len(contact_number) <= 20:
+                        user_profile.contact_number = contact_number
                 elif function_name == "save_whatsapp_number":
                     whatsapp_number = arguments_dict.get('whatsapp_number', '')
                     if isinstance(whatsapp_number, str) and len(whatsapp_number) <= 20:
                         user_profile.whatsapp_number = whatsapp_number
-                elif function_name == "save_passport":
-                    passport = arguments_dict.get('passport', '')
-                    if isinstance(passport, str) and len(passport) <= 50:  # Max length of 50
-                        # Optional: Validate passport format based on specific requirements
-                        user_profile.passport = passport
                 elif function_name == "save_location":
                     location = arguments_dict.get('location', '')
                     if isinstance(location, str) and len(location) <= 255:
@@ -234,7 +229,6 @@ def generate_tools(user_profile):
         {"field": "age", "function_name": "save_age", "description": "save age of user", "parameter_type": "string", "parameter_name": "age"},
         {"field": "contact_number", "function_name": "save_contact_number", "description": "save contact number of user", "parameter_type": "string", "parameter_name": "contact_number"},
         {"field": "whatsapp_number", "function_name": "save_whatsapp_number", "description": "save whatsapp number of user", "parameter_type": "string", "parameter_name": "whatsapp_number"},
-        {"field": "passport", "function_name": "save_passport", "description": "save passport number of user", "parameter_type": "string", "parameter_name": "passport"},
         {"field": "location", "function_name": "save_location", "description": "save location of user", "parameter_type": "string", "parameter_name": "location"},
     ]
 
@@ -284,7 +278,6 @@ def get_oldest_uncopied_user(request):
             'age': oldest_uncopied_user.age,
             'contact_number': oldest_uncopied_user.contact_number,
             'whatsapp_number': oldest_uncopied_user.whatsapp_number,
-            'passport': oldest_uncopied_user.passport,
             'location': oldest_uncopied_user.location,
         }
     else:

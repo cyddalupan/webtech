@@ -7,7 +7,6 @@ class UserProfile(models.Model):
     age = models.CharField(null=True, blank=True, max_length=30)
     contact_number = models.CharField(max_length=20, null=True, blank=True)
     whatsapp_number = models.CharField(max_length=20, null=True, blank=True)
-    passport = models.CharField(max_length=50, null=True, blank=True)
     location = models.CharField(max_length=255, null=True, blank=True)
     is_copied = models.BooleanField(default=False)
 
