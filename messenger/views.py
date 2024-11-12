@@ -71,6 +71,10 @@ def save_facebook_chat(request):
     return JsonResponse({'error': 'Invalid request method'}, status=400)
 
 def send_message(recipient_id, message_text, facebook_page_instance):
+    print("recipient_id",recipient_id)
+    print("message_text", message_text)
+    print("fb_page_instance", facebook_page_instance)
+
     """
     Sends a message back to the Facebook user using Facebook's Send API.
     """
@@ -257,7 +261,21 @@ def generate_tools(user_profile):
 
     return tools
 
+class FacebookPageInstance:
+    def __init__(self, token):
+        self.token = token
+
 def chat_test_page(request):
+    recipient_id = '8475058809238600'
+    message_text = 'follow up sir'
+    
+    # Define the facebook_page_instance with the required token
+    facebook_page_instance = FacebookPageInstance(
+        token='EAAmxSgpoPEUBO9cWEyM5d1fZABwhi2nFwvzUypm0PsrsqoKBUphCeHvZBbcRweyC87RLX27hL8pyU6DBFlYop8MxWoQoill4KJUKyxvN1I8L8jZCNnSCiQHJWgzjcP7B9wbQsMfxDFSkuGxCWi4tdukud0Rv3GzvpwOyX19S666IvA8I4ByMQ5itPoBb6cO'
+    )
+
+    send_message(recipient_id, message_text, facebook_page_instance)
+
     return render(request, 'chat_test.html')
 
 def get_oldest_uncopied_user(request):
