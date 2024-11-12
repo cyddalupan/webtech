@@ -71,10 +71,6 @@ def save_facebook_chat(request):
     return JsonResponse({'error': 'Invalid request method'}, status=400)
 
 def send_message(recipient_id, message_text, facebook_page_instance):
-    print("recipient_id",recipient_id)
-    print("message_text", message_text)
-    print("fb_page_instance", facebook_page_instance)
-
     """
     Sends a message back to the Facebook user using Facebook's Send API.
     """

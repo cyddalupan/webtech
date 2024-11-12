@@ -36,7 +36,6 @@ class Command(BaseCommand):
                 status_code = send_message(user.facebook_id, message_text, facebook_page)
 
                 if status_code == 200:
-                    print(f"Message sent to {user.full_name} ({user.facebook_id})")
                     self.stdout.write(f"Message sent to {user.full_name} ({user.facebook_id})")
                 else:
                     self.stdout.write(f"Failed to send message to {user.full_name} ({user.facebook_id}). Status code: {status_code}")
