@@ -248,6 +248,7 @@ def generate_tools(user_profile):
                             },
                         },
                         "required": [field_info["parameter_name"]],
+                        "additionalProperties": False,
                     },
                 }
             })
