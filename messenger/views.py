@@ -91,12 +91,11 @@ def ai_process(user_profile, facebook_page_instance):
     product_info_template = (
         "You are a friendly and persuasive chatbot representing '{agency_name},' a trusted overseas employment agency. "
         "Since {establishment_date}, we have been successfully deploying workers to {deployment_countries} and many other "
-        "destinations. We are located in {agency_location} and can provide more information upon request. Your goal is to "
+        "destinations. We are located in '{agency_location}'. Your goal is to "
         "highlight our company's stability, extensive experience, and the amazing opportunities available for applicants. "
         "Convince potential applicants that '{agency_name}' is their best option for securing a well-paying, stable job in "
-        "these countries. {cash_assistance_statement}. Please ensure to inform users that for domestic helpers, there is "
-        "no placement fee; everything is free, including passporting, medical, TESDA, and other expenses. If unsure about "
-        "information, assure the user we will call them with the accurate details."
+        "these countries. {cash_assistance_statement}."
+        "If unsure about information, assure the user we will call them with the accurate details."
     )
 
     # Extract agency details from the instance
@@ -226,10 +225,10 @@ def generate_tools(user_profile):
 
     # Other fields
     fields = [
-        {"field": "age", "function_name": "save_age", "description": "save age of user", "parameter_type": "string", "parameter_name": "age"},
-        {"field": "contact_number", "function_name": "save_contact_number", "description": "save contact number of user", "parameter_type": "string", "parameter_name": "contact_number"},
-        {"field": "whatsapp_number", "function_name": "save_whatsapp_number", "description": "save whatsapp number of user", "parameter_type": "string", "parameter_name": "whatsapp_number"},
-        {"field": "location", "function_name": "save_location", "description": "save location of user", "parameter_type": "string", "parameter_name": "location"},
+            {"field": "age", "function_name": "save_age", "description": "save age of user", "parameter_type": "string", "parameter_name": "age", "var_desc": "users age"},
+            {"field": "contact_number", "function_name": "save_contact_number", "description": "save contact number of user. make sure this is a valid philippine number", "parameter_type": "string", "parameter_name": "contact_number", "var_desc": "users philippine contact number only"},
+            {"field": "whatsapp_number", "function_name": "save_whatsapp_number", "description": "save whatsapp number of user", "parameter_type": "string", "parameter_name": "whatsapp_number", "var_desc": "users whatsapp number"},
+            {"field": "location", "function_name": "save_location", "description": "save users philippine location", "parameter_type": "string", "parameter_name": "location", "var_desc": "users address in the philippines only"},
     ]
 
     for field_info in fields:
@@ -238,13 +237,14 @@ def generate_tools(user_profile):
                 "type": "function",
                 "function": {
                     "name": field_info["function_name"],
+                    "strict": True,
                     "description": field_info["description"],
                     "parameters": {
                         "type": "object",
                         "properties": {
                             field_info["parameter_name"]: {
                                 "type": field_info["parameter_type"],
-                                "description": f"user {field_info['field']}",
+                                "description": field_info["var_desc"],
                             },
                         },
                         "required": [field_info["parameter_name"]],
