@@ -228,7 +228,7 @@ def generate_tools(user_profile):
             {"field": "age", "function_name": "save_age", "description": "save age of user", "parameter_type": "string", "parameter_name": "age", "var_desc": "users age"},
             {"field": "contact_number", "function_name": "save_contact_number", "description": "save contact number of user. make sure this is a valid philippine number", "parameter_type": "string", "parameter_name": "contact_number", "var_desc": "users philippine contact number only"},
             {"field": "whatsapp_number", "function_name": "save_whatsapp_number", "description": "save whatsapp number of user", "parameter_type": "string", "parameter_name": "whatsapp_number", "var_desc": "users whatsapp number"},
-            {"field": "location", "function_name": "save_location", "description": "save users philippine location", "parameter_type": "string", "parameter_name": "location", "var_desc": "users address in the philippines only"},
+            {"field": "location", "function_name": "save_location", "description": "save users valid complete philippine address", "parameter_type": "string", "parameter_name": "location", "var_desc": "users valid complete address in the philippines only"},
     ]
 
     for field_info in fields:
