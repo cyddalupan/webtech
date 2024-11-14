@@ -269,50 +269,66 @@ def get_oldest_uncopied_user(request):
     # Retrieve all user profiles where is_copied is False
     uncopied_users = UserProfile.objects.filter(is_copied=False).order_by('id')
 
+    # Create a list to hold all uncopied users' data
+    users_data = []
+
     # Check if any uncopied user exists
     if uncopied_users.exists():
-        # Get the oldest uncopied user's profile
-        oldest_uncopied_user = uncopied_users.first()
-        
+        # Iterate over each uncopied user to collect their data
+        for user_profile in uncopied_users:
+            user_data = {
+                'facebook_id': user_profile.facebook_id,
+                'page_id': user_profile.page_id,
+                'full_name': user_profile.full_name,
+                'age': user_profile.age,
+                'contact_number': user_profile.contact_number,
+                'whatsapp_number': user_profile.whatsapp_number,
+                'location': user_profile.location,
+            }
+            users_data.append(user_data)
+
         # Prepare the response data
-        user_data = {
-            'status': 'user_available',
-            'facebook_id': oldest_uncopied_user.facebook_id,
-            'page_id': oldest_uncopied_user.page_id,
-            'full_name': oldest_uncopied_user.full_name,
-            'age': oldest_uncopied_user.age,
-            'contact_number': oldest_uncopied_user.contact_number,
-            'whatsapp_number': oldest_uncopied_user.whatsapp_number,
-            'location': oldest_uncopied_user.location,
+        response_data = {
+            'status': 'users_available',
+            'users': users_data
         }
     else:
-        # Return a status indicating no uncopied user is found
-        user_data = {
-            'status': 'user_unavailable'
+        # Return a status indicating no uncopied users are found
+        response_data = {
+            'status': 'users_unavailable',
+            'users': []
         }
 
     # Return the user data as a JSON response
-    return JsonResponse(user_data)
+    return JsonResponse(response_data)
 
 def mark_as_copied(request, facebook_id):
-    print("facebook_id", facebook_id)
     """
-    View to update the is_copied field of a UserProfile to True based on facebook_id.
+    View to update the is_copied field of UserProfiles to True based on facebook_id.
     
     Args:
-    - facebook_id (str): The Facebook ID of the user profile to update.
+    - facebook_id (str): A comma-separated string of Facebook IDs of the user profiles to update.
     
     Returns:
     - JsonResponse: A JSON response with a success message.
     """
-    # Retrieve the user profile or return 404 if not found
-    user_profile = get_object_or_404(UserProfile, facebook_id=facebook_id)
-    print("user_profile", user_profile)
+    # Split the facebook_ids string into a list of IDs
+    ids_list = facebook_id.split(',')
+    print("facebook_ids list", ids_list)
     
-    # Update the is_copied field
-    user_profile.is_copied = True
-    user_profile.save()
-    print("after update", user_profile)
+    # Iterate over each Facebook ID
+    for facebook_id in ids_list:
+        # Trim any whitespace around the ID
+        facebook_id = facebook_id.strip()
+        
+        # Retrieve the user profile or return 404 if not found
+        user_profile = get_object_or_404(UserProfile, facebook_id=facebook_id)
+        print("user_profile", user_profile)
+        
+        # Update the is_copied field
+        user_profile.is_copied = True
+        user_profile.save()
+        print("after update", user_profile)
     
     # Return a success message
-    return JsonResponse({'message': 'UserProfile marked as copied successfully.'})
+    return JsonResponse({'message': 'UserProfiles marked as copied successfully.'})
