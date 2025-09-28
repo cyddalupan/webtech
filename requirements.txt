@@ -1,6 +1,6 @@
-#pip install django
-#pip install python-dotenv
-#pip install djangorestframework
-#pip install django-allauth
-#pip install requests
-#pip install openai
+django
+python-dotenv
+djangorestframework
+django-allauth
+requests
+openai
